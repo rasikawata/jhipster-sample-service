@@ -1,0 +1,101 @@
+application {
+  config {
+    baseName gateway,
+    packageName com.inv.gateway,
+    applicationType gateway,
+    authenticationType oauth2,
+    prodDatabaseType postgresql,
+    serviceDiscoveryType eureka,
+    testFrameworks [protractor]
+  }
+  entities Stock, Sector, SectorFinantials, Finantials, GroupStrcture
+}
+
+application {
+  config {
+    baseName stock,
+    packageName com.inv.stock,
+    applicationType microservice,
+    authenticationType oauth2,
+    prodDatabaseType postgresql,
+    serverPort 8081,
+    serviceDiscoveryType eureka
+  }
+  entities Stock, Sector, SectorFinantials, Finantials
+}
+
+application {
+  config {
+    baseName group,
+    packageName com.inv.group,
+    applicationType microservice,
+    authenticationType oauth2,
+    prodDatabaseType postgresql,
+    serverPort 8082,
+    serviceDiscoveryType eureka
+  }
+  entities GroupStrcture
+}
+
+entity Stock {
+	code String unique required maxlength(20),
+    company String,
+    description String,
+    subSector String,
+    businessModel String,
+    products String,
+    logo String,
+    alternateCode String
+}
+    
+    
+entity Sector {
+
+    sectorCode String required,
+    description String required
+}
+
+entity SectorFinantials {
+    year Integer required ,
+    quarter String ,
+    eps BigDecimal ,
+    nav BigDecimal 
+}
+
+entity GroupStrcture {
+    code  String required,
+    subCode  String required,
+    ownershipPercentage BigDecimal,
+    shares  BigDecimal
+}
+    
+
+entity Finantials {
+    year Integer required ,
+    quarter String,
+    eps BigDecimal ,
+    nav BigDecimal ,
+    profit BigDecimal ,
+    dividence BigDecimal ,
+    dividenceYield BigDecimal 
+}
+    
+relationship ManyToOne {
+  Stock{sector(sectorCode)} to Sector,
+  SectorFinantials{sector(sectorCode)} to Sector
+  Finantials{stock(code)} to Stock
+}
+
+paginate Stock, SectorFinantials, Finantials with infinite-scroll
+paginate GroupStrcture, Sector with pagination
+
+microservice Stock, SectorFinantials, Finantials, Sector with stock
+microservice GroupStrcture with group
+
+// will be created under 'docker-compose' folder
+deployment {
+  deploymentType docker-compose
+  appsFolders [gateway, group, stock]
+  dockerRepositoryName "jmicro"
+  consoleOptions [zipkin]
+}
